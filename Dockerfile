@@ -1,8 +1,8 @@
 # Pull base image.
-FROM node:latest
+FROM node:16-alpine3.12
 
 # Create a group and user
-RUN addgroup web && useradd web -g web
+RUN addgroup -S web && adduser -S -G web web
 
 RUN mkdir /var/web && \
     chown -R web:web /var/web
