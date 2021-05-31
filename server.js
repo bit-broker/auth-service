@@ -15,6 +15,7 @@ const bodyParser = require('body-parser')
 const log4js = require('log4js')
 const compress = require('compression')
 const helmet = require('helmet')
+const promBundle = require('express-prom-bundle')
 
 const Utils = require('./server/Utils')
 
@@ -76,6 +77,10 @@ if (process.env.NODE_ENV === 'development') {
         next()
     })
 }
+
+// Setup metrics
+const metricsMiddleware = promBundle({ includeMethod: true })
+app.use(metricsMiddleware)
 
 // Setup the API routes
 const API_Router = express.Router()
