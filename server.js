@@ -79,8 +79,10 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Setup metrics
-const metricsMiddleware = promBundle({ includeMethod: true })
-app.use(metricsMiddleware)
+if (process.env.METRICS_ENABLED === 'true') {
+    const metricsMiddleware = promBundle({ includeMethod: true })
+    app.use(metricsMiddleware)
+}
 
 // Setup the API routes
 const API_Router = express.Router()
