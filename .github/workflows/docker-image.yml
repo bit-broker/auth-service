@@ -45,8 +45,8 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/bbk-auth-service:latest,${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/bbk-auth-service:${{ env.TAG_NAME }}
+        tags: ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}:latest,${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}:${{ env.TAG_NAME }}
 
     # SecureCN Scan
     - name: Scan image
-      run: curl -L -s https://securecn.cisco.com/tools/cli/portshift_deployment_cli > scan && chmod +x scan && ./scan run-vulnerability-scan --access-key ${{ secrets.SECURECN_ACCESS_KEY }} --secret-key ${{ secrets.SECURECN_SECRET_KEY }} --image-name=${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/bbk-auth-service:${{ env.TAG_NAME }}
+      run: curl -L -s https://securecn.cisco.com/tools/cli/portshift_deployment_cli > scan && chmod +x scan && ./scan run-vulnerability-scan --access-key ${{ secrets.SECURECN_ACCESS_KEY }} --secret-key ${{ secrets.SECURECN_SECRET_KEY }} --image-name=${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}:${{ env.TAG_NAME }}
