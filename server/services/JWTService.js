@@ -9,11 +9,12 @@
 
 'use strict'
 
+const crypto = require('crypto')
+
 const log4js = require('log4js')
 const logger = log4js.getLogger('jwt.service')
 
 const jose = require('node-jose')
-const uuid = require('uuid')
 
 // JWT Service
 class JWTService {
@@ -52,7 +53,7 @@ class JWTService {
                     const [key] = keyStore.all({ use: 'sig' })
 
                     // Construct the payload
-                    const jti = uuid.v1()
+                    const jti = crypto.randomUUID()
                     const opt = { compact: true, jwk: key, fields: { typ: 'jwt' } }
                     const payload = JSON.stringify({
                         iss: process.env.ISSUER,
