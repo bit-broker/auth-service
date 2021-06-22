@@ -40,7 +40,7 @@ class JWTService {
         logger.info('Signing a token with JWKS')
 
         return new Promise((resolve, reject) => {
-            if (!values.aud || !values.scope) {
+            if (!values.scope) {
                 reject(new Error('Invalid values'))
                 return
             }
