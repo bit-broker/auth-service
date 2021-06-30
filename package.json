@@ -11,7 +11,8 @@
         "create-jwks": "node ./cmd/create-jwks.js",
         "rotate-jwks": "node ./cmd/rotate-jwks.js",
         "clean-jwks": "node ./cmd/clean-jwks.js",
-        "check-jwks": "node ./cmd/check-jwks.js"
+        "check-jwks": "node ./cmd/check-jwks.js",
+        "sign-token": "node ./cmd/sign-token.js"
     },
     "author": "",
     "license": "ISC",
