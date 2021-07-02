@@ -29,6 +29,7 @@ module.exports = function (router) {
     // API Routes
     router.get('/.well-known/jwks.json', JWT.publicKeyStore)
     router.delete('/token/deny', JWT.deny)
-    router.get('/token/check/:jti', JWT.check)
+    router.get('/token/authorize/:jti', JWT.authorize)
+    router.get('/token/authorize', JWT.authorize)
     router.post('/token', JWT.token)
 }
