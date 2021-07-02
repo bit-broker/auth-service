@@ -84,6 +84,14 @@ if (process.env.METRICS_ENABLED === 'true') {
     app.use(metricsMiddleware)
 }
 
+//************************
+//* Clients
+//************************
+if (process.env.NODE_ENV !== 'test') {
+    const redis = require('./server/external/redis/RedisClient')
+    redis.init()
+}
+
 // Setup the API routes
 const API_Router = express.Router()
 require('./server/Routes')(API_Router)

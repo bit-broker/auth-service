@@ -14,12 +14,18 @@ const crypto = require('crypto')
 const log4js = require('log4js')
 const logger = log4js.getLogger('jwt.service')
 
+const redis = require('../external/redis/RedisClient')
+
 const jose = require('node-jose')
+
+const _ = require('lodash')
+
+const Utils = require('../Utils')
 
 // JWT Service
 class JWTService {
     static publicKeyStore() {
-        logger.info('Reading the JWKS')
+        logger.debug('Reading the JWKS')
 
         return new Promise((resolve, reject) => {
             // Read JWKS from env
@@ -37,11 +43,11 @@ class JWTService {
     }
 
     static token(values) {
-        logger.info('Signing a token with JWKS')
+        logger.debug('Signing a token with JWKS')
 
         return new Promise((resolve, reject) => {
             if (!values.scope) {
-                reject(new Error('Invalid values'))
+                reject(Utils.createError('Invalid values', 400))
                 return
             }
 
@@ -67,6 +73,54 @@ class JWTService {
 
                     // Return the token and the identifier
                     resolve({ token, jti })
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+        })
+    }
+
+    static deny(jtis) {
+        logger.debug(`Denying jtis ${JSON.stringify(jtis)}`)
+        if (!_.isArray(jtis)) {
+            return new Promise((_resolve, reject) => {
+                reject(Utils.createError('Invalid values', 400))
+            })
+        }
+
+        // Build promises array
+        const promises = []
+        for (const jti of jtis) {
+            // Check valid UUIDv4
+            if (Utils.isUUIDv4(jti)) {
+                promises.push(
+                    redis.deny(jti, {
+                        date: Date.now(),
+                    })
+                )
+            }
+        }
+
+        return Promise.allSettled(promises)
+    }
+
+    static check(jti) {
+        logger.debug(`Checking jti ${JSON.stringify(jti)}`)
+        return new Promise((resolve, reject) => {
+            if (!Utils.isUUIDv4(jti)) {
+                reject(Utils.createError('Invalid value', 400))
+                return
+            }
+
+            redis
+                .get(jti)
+                .then((values) => {
+                    if (!_.isEmpty(values)) {
+                        reject(Utils.createError('Denied', 403))
+                        return
+                    }
+
+                    resolve()
                 })
                 .catch((err) => {
                     reject(err)
