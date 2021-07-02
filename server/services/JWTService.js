@@ -104,7 +104,7 @@ class JWTService {
         return Promise.allSettled(promises)
     }
 
-    static authorize(jti) {
+    static check(jti) {
         logger.debug(`Checking jti ${JSON.stringify(jti)}`)
         return new Promise((resolve, reject) => {
             if (!Utils.isUUIDv4(jti)) {

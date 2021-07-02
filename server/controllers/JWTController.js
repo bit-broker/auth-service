@@ -36,11 +36,11 @@ class JWTController {
         return Utils.response(JWTService.deny(req.body.jtis), res, next)
     }
 
-    static authorize(req, res, next) {
+    static check(req, res, next) {
         logger.info('Checking if jti allowed')
 
         return Utils.response(
-            JWTService.authorize(req.params.jti || req.headers['x-auth-jti']),
+            JWTService.check(req.params.jti || req.headers['x-auth-jti']),
             res,
             next
         )
