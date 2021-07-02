@@ -29,6 +29,18 @@ class JWTController {
 
         return Utils.response(JWTService.token(req.body), res, next)
     }
+
+    static deny(req, res, next) {
+        logger.info('Adding JTIs to the denylist')
+
+        return Utils.response(JWTService.deny(req.body.jtis), res, next)
+    }
+
+    static check(req, res, next) {
+        logger.info('Checking if jti allowed')
+
+        return Utils.response(JWTService.check(req.params.jti), res, next)
+    }
 }
 
 module.exports = JWTController
