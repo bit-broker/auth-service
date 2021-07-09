@@ -87,10 +87,8 @@ if (process.env.METRICS_ENABLED === 'true') {
 //************************
 //* Clients
 //************************
-if (process.env.NODE_ENV !== 'test') {
-    const redis = require('./server/external/redis/RedisClient')
-    redis.init()
-}
+const redis = require('./server/external/redis/RedisClient')
+redis.init()
 
 // Setup the API routes
 const API_Router = express.Router()
