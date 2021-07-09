@@ -15,6 +15,7 @@
 // Environments handling
 require('dotenv').config({ path: '.env.test' })
 
+const redis = require('../../../server/external/redis/RedisClient')
 const JWTController = require('../../../server/controllers/JWTController')
 
 const expect = require('chai').expect
@@ -26,6 +27,13 @@ const jose = require('node-jose')
 
 // JWT Controller Test Cases
 describe('Test JWTController', () => {
+    before((done) => {
+        // Clean redis
+        redis.client.flushall((_err, _succeeded) => {
+            done()
+        })
+    })
+
     describe('Test Get without key store', () => {
         before(() => {
             process.env.JWKS = undefined
@@ -70,6 +78,60 @@ describe('Test JWTController', () => {
             })
 
             JWTController.publicKeyStore(req, res, next)
+        })
+    })
+
+    describe('Test Get of the deny list', () => {
+        before(() => {
+            const req = httpMocks.createRequest({
+                body: {
+                    jtis: [process.env.JTI2],
+                },
+            })
+            const res = httpMocks.createResponse()
+            const next = sinon.spy()
+
+            JWTController.deny(req, res, next)
+        })
+
+        it('should send success if JTI is not on the deny list', (done) => {
+            const req = httpMocks.createRequest({
+                params: {
+                    jti: process.env.JTI1,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            res.json = sinon.spy()
+
+            const next = sinon.spy()
+            res.json = sinon.stub()
+            res.json.callsFake((_result) => {
+                expect(res.json.calledOnce).to.be.true
+                expect(next.called).to.be.false
+
+                done()
+            })
+
+            JWTController.check(req, res, next)
+        })
+
+        it('should send an error if JTI is on the deny list', (done) => {
+            const req = httpMocks.createRequest({
+                params: {
+                    jti: process.env.JTI2,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            res.json = sinon.spy()
+
+            JWTController.check(req, res, (err) => {
+                expect(res.json.called).to.be.false
+                expect(err).not.to.be.undefined
+
+                done()
+            })
         })
     })
 
@@ -121,7 +183,7 @@ describe('Test JWTController', () => {
             })
         })
 
-        it('should send an error if aud is not provided', (done) => {
+        it('should not send an error if aud is not provided', (done) => {
             const req = httpMocks.createRequest({
                 body: {
                     scope: process.env.SCOPE,
@@ -131,12 +193,17 @@ describe('Test JWTController', () => {
 
             res.json = sinon.spy()
 
-            JWTController.token(req, res, (err) => {
-                expect(res.json.called).to.be.false
-                expect(err.message).to.be.equal('Invalid values')
+            const next = sinon.spy()
+            res.json = sinon.stub()
+            res.json.callsFake((result) => {
+                expect(res.json.calledOnce).to.be.true
+                expect(next.called).to.be.false
+                expect(result).to.have.all.keys(['token', 'jti'])
 
                 done()
             })
+
+            JWTController.token(req, res, next)
         })
 
         it('should correctly sign a new token', (done) => {
@@ -157,11 +224,79 @@ describe('Test JWTController', () => {
                 expect(
                     JSON.parse(Buffer.from(result.token.split('.')[1], 'base64').toString())
                 ).to.have.property('aud', process.env.AUD)
-                //
+
                 done()
             })
 
             JWTController.token(req, res, next)
+        })
+    })
+
+    describe('Test Create of the deny list', () => {
+        it('should send add multiple JTIs on the deny list', () => {
+            const req = httpMocks.createRequest({
+                body: {
+                    jtis: [process.env.JTI1, process.env.JTI2, process.env.JTI3],
+                },
+            })
+            const res = httpMocks.createResponse()
+            const next = sinon.spy()
+
+            JWTController.deny(req, res, next)
+        })
+
+        it('should send an error for JTI1', (done) => {
+            const req = httpMocks.createRequest({
+                params: {
+                    jti: process.env.JTI1,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            res.json = sinon.spy()
+
+            JWTController.check(req, res, (err) => {
+                expect(res.json.called).to.be.false
+                expect(err).not.to.be.undefined
+
+                done()
+            })
+        })
+
+        it('should send an error for JTI2', (done) => {
+            const req = httpMocks.createRequest({
+                params: {
+                    jti: process.env.JTI2,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            res.json = sinon.spy()
+
+            JWTController.check(req, res, (err) => {
+                expect(res.json.called).to.be.false
+                expect(err).not.to.be.undefined
+
+                done()
+            })
+        })
+
+        it('should send an error for JTI3', (done) => {
+            const req = httpMocks.createRequest({
+                headers: {
+                    'x-auth-jti': process.env.JTI3,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            res.json = sinon.spy()
+
+            JWTController.check(req, res, (err) => {
+                expect(res.json.called).to.be.false
+                expect(err).not.to.be.undefined
+
+                done()
+            })
         })
     })
 })

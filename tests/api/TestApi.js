@@ -79,5 +79,30 @@ describe('Test API', () => {
                 )
                 .end(done)
         })
+
+        it('should add JTI1 and JTI2 on the deny list', (done) => {
+            request(server)
+                .delete('/api/v1/token')
+                .send({ jtis: [process.env.JTI1, process.env.JTI2] })
+                .expect(200)
+                .end(done)
+        })
+
+        it('should respond that JTI3 is not on the deny list', (done) => {
+            request(server).get(`/api/v1/token/check/${process.env.JTI3}`).expect(200).end(done)
+        })
+
+        it('should respond that JTI1 is on the deny list', (done) => {
+            request(server).get(`/api/v1/token/check/${process.env.JTI1}`).expect(403).end(done)
+        })
+
+        it('should respond that JTI2 is on the deny list', (done) => {
+            request(server)
+                .post('/api/v1/token/check')
+                .set('x-auth-jti', process.env.JTI2)
+                .send({})
+                .expect(403)
+                .end(done)
+        })
     })
 })

@@ -15,14 +15,21 @@ const logger = log4js.getLogger('external.redis')
 // Redis client
 const redis = require('redis')
 
+// Redis mock client
+const redisMock = require('redis-mock')
+
 const _ = require('lodash')
 
 class RedisClient {
     init() {
         logger.info('Redis client initialized')
-        this.client = redis.createClient(
-            `redis://${process.env.REDIS_ADDR}?db=${process.env.REDIS_DB}&password=${process.env.REDIS_PASSWORD}`
-        )
+        if (process.env.NODE_ENV === 'test') {
+            this.client = redisMock.createClient()
+        } else {
+            this.client = redis.createClient(
+                `redis://${process.env.REDIS_ADDR}?db=${process.env.REDIS_DB}&password=${process.env.REDIS_PASSWORD}`
+            )
+        }
     }
 
     get(jti) {
