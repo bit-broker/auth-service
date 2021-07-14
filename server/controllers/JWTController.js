@@ -165,13 +165,18 @@ class JWTController {
             return next(Utils.createError('Invalid value', 400))
         }
 
-        return Utils.next(JWTService.check(jti), next)
+        return Utils.next(
+            JWTService.check(jti).catch((error) => {
+                throw Utils.newError(error.message, 403)
+            }),
+            next
+        )
     }
 
     static jtiOk(_req, res, _next) {
         logger.info('Sending jti allowed')
 
-        res.send(200)
+        res.sendStatus(200)
     }
 }
 
