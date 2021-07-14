@@ -63,10 +63,11 @@ describe('Test API', () => {
                 .end(done)
         })
 
-        it('should sign a token', (done) => {
+        it('should sign a token with exp', (done) => {
+            const expInOneHour = Math.round(new Date().getTime() / 1000) + 3600
             request(server)
                 .post('/api/v1/token')
-                .send({ aud: process.env.AUD, scope: process.env.SCOPE })
+                .send({ aud: process.env.AUD, scope: process.env.SCOPE, exp: expInOneHour })
                 .expect(200)
                 .expect(
                     (res) =>

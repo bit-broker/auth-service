@@ -96,7 +96,7 @@ describe('Test JWTService', () => {
         })
 
         it('should send an error if key store is invalid or empty', () => {
-            return expect(JWTService.token()).to.eventually.be.rejected
+            return expect(JWTService.create()).to.eventually.be.rejected
         })
     })
 
@@ -109,18 +109,18 @@ describe('Test JWTService', () => {
             process.env.JWKS = JSON.stringify(keyStore.toJSON(true))
         })
 
-        it('should send an error if scope is not provided', () => {
-            return expect(JWTService.token({ aud: process.env.AUD })).to.eventually.be.rejected
+        it('should not send an error if scope is not provided', () => {
+            return expect(JWTService.create({ aud: process.env.AUD })).to.eventually.be.fulfilled
         })
 
         it('should not send an error if aud is not provided', () => {
-            return expect(JWTService.token({ scope: process.env.SCOPE })).to.eventually.be.fulfilled
+            return expect(JWTService.create({ scope: process.env.SCOPE })).to.eventually.be
+                .fulfilled
         })
 
         it('should correctly sign a new token', () => {
-            return expect(
-                JWTService.token({ aud: process.env.AUD, scope: process.env.SCOPE })
-            ).to.eventually.be.fulfilled.and.have.property('token')
+            return expect(JWTService.create({ aud: process.env.AUD, scope: process.env.SCOPE })).to
+                .eventually.be.fulfilled
         })
     })
 
