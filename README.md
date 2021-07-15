@@ -52,12 +52,6 @@ It can be deployed using the following helm chart:
 
   `GET`
 
-*  **URL Params**
-
-   **Required:**
-
-   `uid=[integer]`
-
 * **Success Response:**
 
   * **Code:** 200 <br />
@@ -91,9 +85,14 @@ It can be deployed using the following helm chart:
   ```json
   {
     "aud": "Audience identifier",
-    "scope": "Required scope"
+    "scope": "Required scope",
+    "exp"(Optional): "Unix Time",
   }
   ```
+
+  If "exp" is included in the request a non-refreshable token with the specified
+  validity will be provided.
+  If "exp" is empty, a refresh token will also be included in the answer.
 * **Success Response:**
 
   * **Code:** 200 <br />
@@ -109,6 +108,120 @@ It can be deployed using the following helm chart:
   --header 'Content-Type: application/json' \
   --data-raw '{
     "aud": "1",
-    "scope": "contribute"
+    "scope": "contribute",
+    "exp": "1626358",
   }'
+  ```
+
+#### Refresh a token
+----
+  Signs a new token with the private key and the refresh token.
+
+* **URL**
+
+  /api/v1/token/refresh
+
+* **Method:**
+
+  `POST`
+
+* **Body**
+
+  **Required:**
+
+  ```json
+  {
+    "refresh_token": "The refresh token",
+  }
+  ```
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+
+* **Error Response:**
+
+  * **Code:** 404 <br />
+
+* **Sample Call:**
+
+  ```curl
+  curl --location --request POST 'http://localhost:8080/api/v1/token/refresh_token' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{
+    "refresh_token": "The refresh token"
+  }'
+  ```
+
+#### Add a token to the deny list
+----
+  Adds a token on the deny list using the JTI.
+
+* **URL**
+
+  /api/v1/token
+
+* **Method:**
+
+  `DELETE`
+
+* **Body**
+
+  **Required:**
+
+  ```json
+  {
+    "jtis": ["Array of JTIs"],
+  }
+  ```
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+
+* **Error Response:**
+
+  * **Code:** 404 <br />
+
+* **Sample Call:**
+
+  ```curl
+  curl --location --request DELETE 'http://localhost:8080/api/v1/token' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{
+    "jtis": ["8024280e-2a2c-495a-92dc-93c5b73d17d4"]
+  }'
+  ```
+
+#### Check if a token is on the deny list
+----
+  Check if a token is on the deny list.
+
+* **URL**
+
+  /api/v1/token/check/:jti
+
+* **Method:**
+
+  `GET`
+
+*  **URL Params**
+
+   **Required:**
+
+   `jti=[UUID]`
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+  * **Code:** 403 <br />
+
+* **Error Response:**
+
+  * **Code:** 404 <br />
+
+* **Sample Call:**
+
+  ```curl
+  curl --location 'http://localhost:8080/api/v1/token/check/08be038e-6435-4a38-92ed-d430120acdb7'
   ```
