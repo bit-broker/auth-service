@@ -58,6 +58,14 @@ describe('Test JWTService', () => {
                 'keys'
             )
         })
+
+        it('should correctly decode a token', () => {
+            return expect(
+                JWTService.create({ aud: process.env.AUD }).then((token) =>
+                    JWTService.decode(token)
+                )
+            ).to.eventually.be.fulfilled
+        })
     })
 
     describe('Test Get of the deny list', () => {
