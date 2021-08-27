@@ -63,10 +63,11 @@ describe('Test API', () => {
                 .end(done)
         })
 
-        it('should sign a token', (done) => {
+        it('should sign a token with exp', (done) => {
+            const expInOneHour = Math.round(new Date().getTime() / 1000) + 3600
             request(server)
                 .post('/api/v1/token')
-                .send({ aud: process.env.AUD, scope: process.env.SCOPE })
+                .send({ aud: process.env.AUD, scope: process.env.SCOPE, exp: expInOneHour })
                 .expect(200)
                 .expect(
                     (res) =>
@@ -78,6 +79,98 @@ describe('Test API', () => {
                         ).to.have.property('aud', process.env.AUD)
                 )
                 .end(done)
+        })
+
+        it('should sign a token without exp and return a refresh token', (done) => {
+            request(server)
+                .post('/api/v1/token')
+                .send({ aud: process.env.AUD, scope: process.env.SCOPE })
+                .expect(200)
+                .expect((res) => {
+                    const payload = JSON.parse(
+                        Buffer.from(res.body.token.split('.')[1], 'base64').toString()
+                    )
+                    const currentTime = new Date().getTime() / 1000
+                    const estimatedExpiryTime = Math.round(
+                        currentTime + Number(process.env.JWT_DURATION)
+                    )
+
+                    return (
+                        expect(res.body).to.have.all.keys(['token', 'jti', 'refresh_token']) &&
+                        expect(payload).to.have.property('aud', process.env.AUD) &&
+                        expect(payload)
+                            .to.have.property('exp')
+                            .and.to.be.within(0, estimatedExpiryTime + 1)
+                    ) // Give it one second delay
+                })
+                .end(done)
+        })
+
+        it('should not create a new token without the refresh token', (done) => {
+            request(server).post('/api/v1/token/refresh').send({}).expect(400).end(done)
+        })
+
+        it('should create a new token with the refresh token', (done) => {
+            let refreshToken = ''
+            request(server)
+                .post('/api/v1/token')
+                .send({ aud: process.env.AUD, scope: process.env.SCOPE })
+                .expect(200)
+                .expect((res) => {
+                    refreshToken = res.body.refresh_token
+                    return expect(res.body).to.have.all.keys(['token', 'jti', 'refresh_token'])
+                })
+                .end((_err) => {
+                    request(server)
+                        .post('/api/v1/token/refresh')
+                        .send({ refresh_token: refreshToken })
+                        .expect(200)
+                        .expect((res) => {
+                            const payload = JSON.parse(
+                                Buffer.from(res.body.token.split('.')[1], 'base64').toString()
+                            )
+                            const currentTime = new Date().getTime() / 1000
+                            const estimatedExpiryTime = Math.round(
+                                currentTime + Number(process.env.JWT_DURATION)
+                            )
+
+                            return (
+                                expect(res.body).to.have.all.keys(['token', 'jti']) &&
+                                expect(payload).to.have.property('aud', process.env.AUD) &&
+                                expect(payload)
+                                    .to.have.property('exp')
+                                    .and.to.be.within(0, estimatedExpiryTime + 1)
+                            ) // Give it one second delay
+                        })
+                        .end(done)
+                })
+        })
+
+        it('should not create a new token with the refresh token if JTI is on the deny list', (done) => {
+            let refreshToken = ''
+            let jti = ''
+            request(server)
+                .post('/api/v1/token')
+                .send({ aud: process.env.AUD, scope: process.env.SCOPE })
+                .expect(200)
+                .expect((res) => {
+                    refreshToken = res.body.refresh_token
+                    jti = res.body.jti
+                    return expect(res.body).to.have.all.keys(['token', 'jti', 'refresh_token'])
+                })
+                .end((_err) => {
+                    request(server)
+                        .delete('/api/v1/token')
+                        .send({ jtis: [jti] })
+                        .expect(200)
+                        .end((_err) => {
+                            request(server)
+                                .post('/api/v1/token/refresh')
+                                .send({ refresh_token: refreshToken })
+                                .expect(403)
+                                .end(done)
+                        })
+                })
         })
 
         it('should add JTI1 and JTI2 on the deny list', (done) => {

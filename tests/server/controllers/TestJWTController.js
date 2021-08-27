@@ -79,6 +79,46 @@ describe('Test JWTController', () => {
 
             JWTController.publicKeyStore(req, res, next)
         })
+
+        it('should correctly decode a token', (done) => {
+            const req = httpMocks.createRequest({
+                body: {
+                    scope: process.env.SCOPE,
+                    aud: process.env.AUD,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            const next = sinon.spy()
+            res.json = sinon.stub()
+            res.json.callsFake((result) => {
+                expect(res.json.calledOnce).to.be.true
+                expect(next.called).to.be.false
+                expect(result).to.have.all.keys(['token', 'jti', 'refresh_token'])
+                const refreshToken = result.refresh_token
+
+                // Perform decode
+                const decodeReq = httpMocks.createRequest({
+                    body: {
+                        refresh_token: refreshToken,
+                    },
+                })
+                const decodeRes = httpMocks.createResponse()
+
+                const decodeNext = sinon.stub()
+                decodeNext.callsFake((_result) => {
+                    expect(decodeRes.json.calledOnce).not.to.be.true
+                    expect(decodeNext.called).to.be.true
+                    expect(decodeReq.payload).not.to.be.undefined
+
+                    done()
+                })
+
+                JWTController.decode(decodeReq, decodeRes, decodeNext)
+            })
+
+            JWTController.token(req, res, next)
+        })
     })
 
     describe('Test Get of the deny list', () => {
@@ -102,18 +142,14 @@ describe('Test JWTController', () => {
             })
             const res = httpMocks.createResponse()
 
-            res.json = sinon.spy()
-
-            const next = sinon.spy()
-            res.json = sinon.stub()
-            res.json.callsFake((_result) => {
-                expect(res.json.calledOnce).to.be.true
-                expect(next.called).to.be.false
+            const next = sinon.stub()
+            next.callsFake((error) => {
+                expect(error).to.be.not.null
 
                 done()
             })
 
-            JWTController.check(req, res, next)
+            JWTController.checkJti(req, res, next)
         })
 
         it('should send an error if JTI is on the deny list', (done) => {
@@ -124,10 +160,10 @@ describe('Test JWTController', () => {
             })
             const res = httpMocks.createResponse()
 
-            res.json = sinon.spy()
+            const next = sinon.spy()
 
-            JWTController.check(req, res, (err) => {
-                expect(res.json.called).to.be.false
+            JWTController.checkJti(req, res, (err) => {
+                expect(next.called).to.be.false
                 expect(err).not.to.be.undefined
 
                 done()
@@ -198,7 +234,7 @@ describe('Test JWTController', () => {
             res.json.callsFake((result) => {
                 expect(res.json.calledOnce).to.be.true
                 expect(next.called).to.be.false
-                expect(result).to.have.all.keys(['token', 'jti'])
+                expect(result).to.have.all.keys(['token', 'jti', 'refresh_token'])
 
                 done()
             })
@@ -206,7 +242,7 @@ describe('Test JWTController', () => {
             JWTController.token(req, res, next)
         })
 
-        it('should correctly sign a new token', (done) => {
+        it('should correctly sign a new token without exp', (done) => {
             const req = httpMocks.createRequest({
                 body: {
                     scope: process.env.SCOPE,
@@ -220,12 +256,97 @@ describe('Test JWTController', () => {
             res.json.callsFake((result) => {
                 expect(res.json.calledOnce).to.be.true
                 expect(next.called).to.be.false
-                expect(result).to.have.all.keys(['token', 'jti'])
-                expect(
-                    JSON.parse(Buffer.from(result.token.split('.')[1], 'base64').toString())
-                ).to.have.property('aud', process.env.AUD)
+                expect(result).to.have.all.keys(['token', 'jti', 'refresh_token'])
+                const payload = JSON.parse(
+                    Buffer.from(result.token.split('.')[1], 'base64').toString()
+                )
+                const currentTime = new Date().getTime() / 1000
+                const estimatedExpiryTime = Math.round(
+                    currentTime + Number(process.env.JWT_DURATION)
+                )
+                expect(payload).to.have.property('aud', process.env.AUD) &&
+                    expect(payload)
+                        .to.have.property('exp')
+                        .and.to.be.within(0, estimatedExpiryTime + 1) // Give it one second delay
 
                 done()
+            })
+
+            JWTController.token(req, res, next)
+        })
+
+        it('should correctly sign a new token with exp', (done) => {
+            const expInOneHour = Math.round(new Date().getTime() / 1000) + 3600
+            const req = httpMocks.createRequest({
+                body: {
+                    scope: process.env.SCOPE,
+                    aud: process.env.AUD,
+                    exp: expInOneHour,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            const next = sinon.spy()
+            res.json = sinon.stub()
+            res.json.callsFake((result) => {
+                expect(res.json.calledOnce).to.be.true
+                expect(next.called).to.be.false
+                expect(result).to.have.all.keys(['token', 'jti'])
+                const payload = JSON.parse(
+                    Buffer.from(result.token.split('.')[1], 'base64').toString()
+                )
+                const currentTime = new Date().getTime() / 1000
+                const estimatedExpiryTime = Math.round(currentTime + expInOneHour)
+                expect(payload).to.have.property('aud', process.env.AUD) &&
+                    expect(payload)
+                        .to.have.property('exp')
+                        .and.to.be.within(0, estimatedExpiryTime + 1) // Give it one second delay
+
+                done()
+            })
+
+            JWTController.token(req, res, next)
+        })
+
+        it('should correctly create a new token with the refresh token', (done) => {
+            const req = httpMocks.createRequest({
+                body: {
+                    scope: process.env.SCOPE,
+                    aud: process.env.AUD,
+                },
+            })
+            const res = httpMocks.createResponse()
+
+            const next = sinon.spy()
+            res.json = sinon.stub()
+            res.json.callsFake((result) => {
+                expect(res.json.calledOnce).to.be.true
+                expect(next.called).to.be.false
+                expect(result).to.have.all.keys(['token', 'jti', 'refresh_token'])
+                const refreshToken = result.refresh_token
+
+                // Perform refresh
+                const refreshReq = httpMocks.createRequest({
+                    body: {
+                        refresh_token: refreshToken,
+                    },
+                })
+                refreshReq.payload = JSON.parse(
+                    Buffer.from(refreshToken.split('.')[1], 'base64').toString()
+                )
+                const refreshRes = httpMocks.createResponse()
+
+                const refreshNext = sinon.spy()
+                refreshRes.json = sinon.stub()
+                refreshRes.json.callsFake((result) => {
+                    expect(refreshRes.json.calledOnce).to.be.true
+                    expect(refreshNext.called).to.be.false
+                    expect(result).to.have.all.keys(['token', 'jti'])
+
+                    done()
+                })
+
+                JWTController.refresh(refreshReq, refreshRes, refreshNext)
             })
 
             JWTController.token(req, res, next)
@@ -255,7 +376,7 @@ describe('Test JWTController', () => {
 
             res.json = sinon.spy()
 
-            JWTController.check(req, res, (err) => {
+            JWTController.checkJti(req, res, (err) => {
                 expect(res.json.called).to.be.false
                 expect(err).not.to.be.undefined
 
@@ -273,7 +394,7 @@ describe('Test JWTController', () => {
 
             res.json = sinon.spy()
 
-            JWTController.check(req, res, (err) => {
+            JWTController.checkJti(req, res, (err) => {
                 expect(res.json.called).to.be.false
                 expect(err).not.to.be.undefined
 
@@ -291,7 +412,7 @@ describe('Test JWTController', () => {
 
             res.json = sinon.spy()
 
-            JWTController.check(req, res, (err) => {
+            JWTController.checkJti(req, res, (err) => {
                 expect(res.json.called).to.be.false
                 expect(err).not.to.be.undefined
 
