@@ -33,7 +33,7 @@ class JWTController {
     static deny(req, res, next) {
         logger.info('Adding JTIs to the denylist')
 
-        return Utils.response(JWTService.deny(req.body.jtis), res, next)
+        return Utils.response(JWTService.deny(req.body), res, next)
     }
 
     static check(req, res, next) {
