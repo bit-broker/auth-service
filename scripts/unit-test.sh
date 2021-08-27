@@ -1,3 +1,2 @@
 #!/bin/bash -e
-npm install
-npm run coverage
+docker run $(docker build -q .) npm run coverage

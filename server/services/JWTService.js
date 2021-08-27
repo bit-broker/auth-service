@@ -9,8 +9,6 @@
 
 'use strict'
 
-const crypto = require('crypto')
-
 const log4js = require('log4js')
 const logger = log4js.getLogger('jwt.service')
 
@@ -42,15 +40,10 @@ class JWTService {
         })
     }
 
-    static token(values) {
+    static create(payload) {
         logger.debug('Signing a token with JWKS')
 
         return new Promise((resolve, reject) => {
-            if (!values.scope) {
-                reject(Utils.createError('Invalid values', 400))
-                return
-            }
-
             // Read JWKS from env
             const data = process.env.JWKS
 
@@ -59,20 +52,36 @@ class JWTService {
                     const [key] = keyStore.all({ use: 'sig' })
 
                     // Construct the payload
-                    const jti = crypto.randomUUID()
                     const opt = { compact: true, jwk: key, fields: { typ: 'jwt' } }
-                    const payload = JSON.stringify({
-                        iss: process.env.ISSUER,
-                        aud: values.aud,
-                        jti: jti,
-                        scp: values.scope,
-                    })
 
                     // Sign the payload
-                    const token = await jose.JWS.createSign(opt, key).update(payload).final()
+                    const token = await jose.JWS.createSign(opt, key)
+                        .update(JSON.stringify(payload))
+                        .final()
 
                     // Return the token and the identifier
-                    resolve({ token, jti })
+                    resolve(token)
+                })
+                .catch((err) => {
+                    reject(err)
+                })
+        })
+    }
+
+    static decode(token) {
+        logger.debug('Decoding a token with JWKS')
+
+        return new Promise((resolve, reject) => {
+            // Read JWKS from env
+            const data = process.env.JWKS
+
+            jose.JWK.asKeyStore(data.toString())
+                .then(async (keyStore) => {
+                    // Verify the token
+                    const result = await jose.JWS.createVerify(keyStore).verify(token)
+
+                    // Return the payload
+                    resolve(JSON.parse(result.payload.toString()))
                 })
                 .catch((err) => {
                     reject(err)
@@ -82,11 +91,6 @@ class JWTService {
 
     static deny(jtis) {
         logger.debug(`Denying jtis ${JSON.stringify(jtis)}`)
-        if (!_.isArray(jtis)) {
-            return new Promise((_resolve, reject) => {
-                reject(Utils.createError('Invalid values', 400))
-            })
-        }
 
         // Build promises array
         const promises = []
@@ -106,17 +110,13 @@ class JWTService {
 
     static check(jti) {
         logger.debug(`Checking jti ${JSON.stringify(jti)}`)
-        return new Promise((resolve, reject) => {
-            if (!Utils.isUUIDv4(jti)) {
-                reject(Utils.createError('Invalid value', 400))
-                return
-            }
 
+        return new Promise((resolve, reject) => {
             redis
                 .get(jti)
                 .then((values) => {
                     if (!_.isEmpty(values)) {
-                        reject(Utils.createError('Denied', 403))
+                        reject(new Error('Denied'))
                         return
                     }
 
