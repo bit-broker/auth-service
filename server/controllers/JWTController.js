@@ -167,7 +167,7 @@ class JWTController {
 
         return Utils.next(
             JWTService.check(jti).catch((error) => {
-                throw Utils.newError(error.message, 401)
+                throw Utils.newError(error.message, 403)
             }),
             next
         )
