@@ -22,206 +22,213 @@ It can be deployed using the following helm chart:
 
 #### Generate new Json Web Key Store
 
-  ```sh
-   npm run --silent create-jwks
-  ```
+```sh
+ npm run --silent create-jwks
+```
 
 #### Check a Json Web Key Store
 
-  ```sh
-   npm run --silent check-jwks $JWKS
-  ```
+```sh
+ npm run --silent check-jwks $JWKS
+```
 
 #### Rotate an existing Json Web Key Store
 
-  ```sh
-   npm run --silent rotate-jwks $JWKS
-  ```
+```sh
+ npm run --silent rotate-jwks $JWKS
+```
 
 ### REST API
 
 #### Get the Public Key
-----
-  Returns the public key to be used for token validation.
 
-* **URL**
+---
 
-  /api/v1/.well-known/jwks.json
+Returns the public key to be used for token validation.
 
-* **Method:**
+-   **URL**
 
-  `GET`
+    /api/v1/.well-known/jwks.json
 
-* **Success Response:**
+-   **Method:**
 
-  * **Code:** 200 <br />
+    `GET`
 
-* **Error Response:**
+-   **Success Response:**
 
-  * **Code:** 404 <br />
+    -   **Code:** 200 <br />
 
-* **Sample Call:**
+-   **Error Response:**
 
-  ```curl
-  curl --location --request PUT '/api/v1/.well-known/jwks.json'
-  ```
+    -   **Code:** 404 <br />
+
+-   **Sample Call:**
+
+    ```curl
+    curl --location --request PUT '/api/v1/.well-known/jwks.json'
+    ```
 
 #### Sign a Token
-----
-  Signs a new token with the private key.
 
-* **URL**
+---
 
-  /api/v1/token
+Signs a new token with the private key.
 
-* **Method:**
+-   **URL**
 
-  `POST`
+    /api/v1/token
 
-* **Body**
+-   **Method:**
 
-  **Required:**
+    `POST`
 
-  ```json
-  {
-    "aud": "Audience identifier",
-    "scope": "Required scope",
-    "exp"(Optional): "Unix Time",
-  }
-  ```
+-   **Body**
 
-  If "exp" is included in the request a non-refreshable token with the specified
-  validity will be provided.
-  If "exp" is empty, a refresh token will also be included in the answer.
-* **Success Response:**
+    **Required:**
 
-  * **Code:** 200 <br />
+    ```json
+    {
+      "aud": "Audience identifier",
+      "scope": "Required scope",
+      "exp"(Optional): "Unix Time",
+    }
+    ```
 
-* **Error Response:**
+    If "exp" is included in the request a non-refreshable token with the specified
+    validity will be provided.
+    If "exp" is empty, a refresh token will also be included in the answer.
 
-  * **Code:** 404 <br />
+-   **Success Response:**
 
-* **Sample Call:**
+    -   **Code:** 200 <br />
 
-  ```curl
-  curl --location --request POST 'http://localhost:8080/api/v1/token' \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-    "aud": "1",
-    "scope": "contribute",
-    "exp": "1626358",
-  }'
-  ```
+-   **Error Response:**
+
+    -   **Code:** 404 <br />
+
+-   **Sample Call:**
+
+    ```curl
+    curl --location --request POST 'http://localhost:8080/api/v1/token' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+      "aud": "1",
+      "scope": "contribute",
+      "exp": "1626358",
+    }'
+    ```
 
 #### Refresh a token
-----
-  Signs a new token with the private key and the refresh token.
 
-* **URL**
+---
 
-  /api/v1/token/refresh
+Signs a new token with the private key and the refresh token.
 
-* **Method:**
+-   **URL**
 
-  `POST`
+    /api/v1/token/refresh
 
-* **Body**
+-   **Method:**
 
-  **Required:**
+    `POST`
 
-  ```json
-  {
-    "refresh_token": "The refresh token",
-  }
-  ```
+-   **Body**
 
-* **Success Response:**
+    **Required:**
 
-  * **Code:** 200 <br />
+    ```json
+    {
+        "refresh_token": "The refresh token"
+    }
+    ```
 
-* **Error Response:**
+-   **Success Response:**
 
-  * **Code:** 404 <br />
+    -   **Code:** 200 <br />
 
-* **Sample Call:**
+-   **Error Response:**
 
-  ```curl
-  curl --location --request POST 'http://localhost:8080/api/v1/token/refresh_token' \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-    "refresh_token": "The refresh token"
-  }'
-  ```
+    -   **Code:** 404 <br />
+
+-   **Sample Call:**
+
+    ```curl
+    curl --location --request POST 'http://localhost:8080/api/v1/token/refresh_token' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+      "refresh_token": "The refresh token"
+    }'
+    ```
 
 #### Add a token to the deny list
-----
-  Adds a token on the deny list using the JTI.
 
-* **URL**
+---
 
-  /api/v1/token
+Adds a token on the deny list using the JTI.
 
-* **Method:**
+-   **URL**
 
-  `DELETE`
+    /api/v1/token
 
-* **Body**
+-   **Method:**
 
-  **Required:**
+    `DELETE`
 
-  ```json
-  {
-    "jtis": ["Array of JTIs"],
-  }
-  ```
+-   **Body**
 
-* **Success Response:**
+    **Required:**
 
-  * **Code:** 200 <br />
+    ```json
+    ["Array of JTIs"],
+    ```
 
-* **Error Response:**
+-   **Success Response:**
 
-  * **Code:** 404 <br />
+    -   **Code:** 200 <br />
 
-* **Sample Call:**
+-   **Error Response:**
 
-  ```curl
-  curl --location --request DELETE 'http://localhost:8080/api/v1/token' \
-  --header 'Content-Type: application/json' \
-  --data-raw '{
-    "jtis": ["8024280e-2a2c-495a-92dc-93c5b73d17d4"]
-  }'
-  ```
+    -   **Code:** 404 <br />
+
+-   **Sample Call:**
+
+    ```curl
+    curl --location --request DELETE 'http://localhost:8080/api/v1/token' \
+    --header 'Content-Type: application/json' \
+    --data-raw '["8024280e-2a2c-495a-92dc-93c5b73d17d4"]'
+    ```
 
 #### Check if a token is on the deny list
-----
-  Check if a token is on the deny list.
 
-* **URL**
+---
 
-  /api/v1/token/check/:jti
+Check if a token is on the deny list.
 
-* **Method:**
+-   **URL**
 
-  `GET`
+    /api/v1/token/check/:jti
 
-*  **URL Params**
+-   **Method:**
 
-   **Required:**
+    `GET`
 
-   `jti=[UUID]`
+-   **URL Params**
 
-* **Success Response:**
+    **Required:**
 
-  * **Code:** 200 <br />
-  * **Code:** 403 <br />
+    `jti=[UUID]`
 
-* **Error Response:**
+-   **Success Response:**
 
-  * **Code:** 404 <br />
+    -   **Code:** 200 <br />
+    -   **Code:** 403 <br />
 
-* **Sample Call:**
+-   **Error Response:**
 
-  ```curl
-  curl --location 'http://localhost:8080/api/v1/token/check/08be038e-6435-4a38-92ed-d430120acdb7'
-  ```
+    -   **Code:** 404 <br />
+
+-   **Sample Call:**
+
+    ```curl
+    curl --location 'http://localhost:8080/api/v1/token/check/08be038e-6435-4a38-92ed-d430120acdb7'
+    ```
