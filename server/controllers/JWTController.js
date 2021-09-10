@@ -45,15 +45,15 @@ class JWTController {
         payload.scope = values.scope
 
         // Get current time
-        const currentTime = Math.round(new Date().getTime() / 1000)
+        const currentTime = Math.trunc(new Date().getTime() / 1000)
 
         // Check and convert exp value
-        const parsedExp = Math.round(Number(values.exp))
+        const parsedExp = Math.trunc(Number(values.exp))
         if (!_.isUndefined(values.exp) && (_.isNaN(parsedExp) || parsedExp <= currentTime)) {
             return next(Utils.createError('Invalid values', 400))
         }
         payload.exp = isNaN(parsedExp)
-            ? currentTime + Math.round(Number(process.env.JWT_DURATION))
+            ? currentTime + Math.trunc(Number(process.env.JWT_DURATION))
             : parsedExp
 
         // Generate payload
@@ -124,14 +124,14 @@ class JWTController {
         }
 
         // Get current time
-        const currentTime = Math.round(new Date().getTime() / 1000)
+        const currentTime = Math.trunc(new Date().getTime() / 1000)
 
         // Create payload
         const payload = {
             iat: currentTime,
             iss: req.payload.iss,
             jti: req.jti,
-            exp: currentTime + Math.round(Number(process.env.JWT_DURATION)),
+            exp: currentTime + Math.trunc(Number(process.env.JWT_DURATION)),
             scope: req.payload.claims.scope,
             aud: req.payload.claims.aud,
         }
