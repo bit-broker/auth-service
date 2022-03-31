@@ -161,7 +161,7 @@ describe('Test API', () => {
                 .end((_err) => {
                     request(server)
                         .delete('/api/v1/token')
-                        .send({ jtis: [jti] })
+                        .send([jti])
                         .expect(200)
                         .end((_err) => {
                             request(server)
@@ -176,7 +176,7 @@ describe('Test API', () => {
         it('should add JTI1 and JTI2 on the deny list', (done) => {
             request(server)
                 .delete('/api/v1/token')
-                .send({ jtis: [process.env.JTI1, process.env.JTI2] })
+                .send([process.env.JTI1, process.env.JTI2])
                 .expect(200)
                 .end(done)
         })
