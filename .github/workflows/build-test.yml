@@ -11,16 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
        
-      - name: Check out auth-service repo
-        uses: actions/checkout@master
-        with:
-          repository: bit-broker/auth-service
-          path: ./auth-service
+      - name: checkout
+        uses: actions/checkout@v2
 
-      - name: build docker 
-        run: ./scripts/build-docker.sh
+      - name: build docker
+        working-directory: scripts
+        run: ./build-docker.sh
         shell: bash
 
-      - name: run tests in docker 
-        run: ./scripts/unit-test.sh
+      - name: run tests in docker
+        working-directory: scripts
+        run: ./unit-test.sh
         shell: bash
