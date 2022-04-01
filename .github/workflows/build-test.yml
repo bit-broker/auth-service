@@ -18,7 +18,9 @@ jobs:
           path: ./auth-service
 
       - name: build docker
+        working-directory: scripts 
         run: ./build-docker.sh
 
       - name: run tests in docker
+        working-directory: scripts 
         run: ./unit-test.sh
