@@ -17,10 +17,8 @@ jobs:
           repository: bit-broker/auth-service
           path: ./auth-service
 
-      - name: build docker
-        working-directory: scripts 
-        run: ./build-docker.sh
+      - name: build docker 
+        run: ./scripts/build-docker.sh
 
-      - name: run tests in docker
-        working-directory: scripts 
-        run: ./unit-test.sh
+      - name: run tests in docker 
+        run: ./scripts/unit-test.sh
