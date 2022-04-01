@@ -1,0 +1,24 @@
+name: Build and test
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+   
+  build-launch-test:
+    runs-on: ubuntu-latest
+    steps:
+       
+      - name: Check out auth-service repo
+        uses: actions/checkout@master
+        with:
+          repository: bit-broker/auth-service
+          path: ./auth-service
+
+      - name: build docker
+        run: ./build-docker.sh
+
+      - name: run tests in docker
+        run: ./unit-test.sh
