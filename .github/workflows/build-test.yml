@@ -19,6 +19,8 @@ jobs:
 
       - name: build docker 
         run: ./scripts/build-docker.sh
+        shell: bash
 
       - name: run tests in docker 
         run: ./scripts/unit-test.sh
+        shell: bash
