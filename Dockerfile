@@ -1,5 +1,5 @@
 # Pull base image.
-FROM node:16-alpine3.12
+FROM node:17-alpine3.12
 
 # Create a group and user
 RUN addgroup -S web && adduser -S -G web web
