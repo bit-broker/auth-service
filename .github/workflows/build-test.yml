@@ -1,0 +1,23 @@
+name: Build and test
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+   
+  build-launch-test:
+    runs-on: ubuntu-latest
+    steps:
+       
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: build docker
+        run: ./build-docker.sh
+        shell: bash
+
+      - name: run tests in docker
+        run: ./unit-test.sh
+        shell: bash
