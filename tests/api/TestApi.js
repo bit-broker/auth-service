@@ -81,6 +81,23 @@ describe('Test API', () => {
                 .end(done)
         })
 
+        it('should sign a token with jti', (done) => {
+            request(server)
+                .post('/api/v1/token')
+                .send({ aud: process.env.AUD, scope: process.env.SCOPE, jti: process.env.JTI1 })
+                .expect(200)
+                .expect(
+                    (res) =>
+                        expect(res.body).to.have.all.keys(['token', 'jti', 'refresh_token']) &&
+                        expect(
+                            JSON.parse(
+                                Buffer.from(res.body.token.split('.')[1], 'base64').toString()
+                            )
+                        ).to.include({ aud: process.env.AUD, jti: process.env.JTI1 })
+                )
+                .end(done)
+        })
+
         it('should sign a token without exp and return a refresh token', (done) => {
             request(server)
                 .post('/api/v1/token')
