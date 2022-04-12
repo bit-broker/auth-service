@@ -59,7 +59,7 @@ class JWTController {
         // Generate payload
         payload.iss = process.env.ISSUER
         payload.iat = currentTime
-        payload.jti = crypto.randomUUID()
+        payload.jti = values.jti || crypto.randomUUID()
 
         // Check if needs refresh token
         if (isNaN(parsedExp)) {
