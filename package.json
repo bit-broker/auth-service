@@ -15,7 +15,7 @@
         "sign-token": "node ./cmd/sign-token.js"
     },
     "author": "",
-    "license": "ISC",
+    "license": "Apache-2.0",
     "dependencies": {
         "compression": "^1.7.4",
         "cookie-parser": "^1.4.5",
