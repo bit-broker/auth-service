@@ -42,14 +42,11 @@ const app = express()
 
 // Make the loggers
 log4js.configure({
-    appenders: [
-        {
-            type: 'console',
-        },
-    ],
-    replaceConsole: true,
-    levels: {
-        '[all]': process.env.LOG_LEVEL,
+    appenders: {
+        out: { type: 'console' },
+    },
+    categories: {
+        default: { appenders: ['out'], level: process.env.LOG_LEVEL },
     },
 })
 const logger = log4js.getLogger('server')
