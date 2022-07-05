@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node index.js",
         "lint": "eslint --fix . && prettier \"**/*.{js,jsx}\" --write",
-        "test": "./node_modules/mocha/bin/mocha 'tests/**/*.js' --recursive -t 5000",
+        "test": "./node_modules/.bin/mocha 'tests/**/*.js' --recursive -t 5000",
         "coverage": "nyc npm run test",
         "create-jwks": "node ./cmd/create-jwks.js",
         "rotate-jwks": "node ./cmd/rotate-jwks.js",
