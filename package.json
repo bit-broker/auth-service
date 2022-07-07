@@ -24,7 +24,7 @@
         "express": "^4.18.1",
         "express-prom-bundle": "^6.5.0",
         "helmet": "^4.4.1",
-        "log4js": "^6.5.2",
+        "log4js": "^6.6.0",
         "moment": "^2.29.3",
         "node-jose": "^2.0.0",
         "prom-client": "^13.1.0",
