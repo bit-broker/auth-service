@@ -28,7 +28,7 @@
         "moment": "^2.29.3",
         "node-jose": "^2.0.0",
         "prom-client": "^13.1.0",
-        "redis": "^3.1.2"
+        "redis": "^4.3.1"
     },
     "devDependencies": {
         "chai": "^4.3.6",
