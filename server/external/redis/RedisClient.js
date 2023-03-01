@@ -39,43 +39,39 @@ class RedisClient {
     async init() {
         logger.info('Redis client initialized')
         if (process.env.NODE_ENV === 'test') {
-            this.client = redisMock.createClient()
+            this.client = redisMock.createClient({ legacyMode: true })
         } else {
-            this.client = redis.createClient(
-                `redis://${process.env.REDIS_ADDR}?db=${process.env.REDIS_DB}&password=${process.env.REDIS_PASSWORD}`
-            )
+            this.client = redis.createClient({
+                url: `redis://${process.env.REDIS_ADDR}?db=${process.env.REDIS_DB}&password=${process.env.REDIS_PASSWORD}`,
+            })
             await this.client.connect()
         }
     }
 
     get(jti) {
         return new Promise((resolve, reject) => {
-            this.client
-                .get(jti, (err, res) => {
-                    if (err) {
-                        logger.error(err)
-                        return reject(err)
-                    }
+            this.client.get(jti, (err, res) => {
+                if (err) {
+                    logger.error(err)
+                    return reject(err)
+                }
 
-                    return resolve(_.isEmpty(res) ? {} : JSON.parse(res))
-                })
-                .catch((err) => logger.error(err))
+                return resolve(_.isEmpty(res) ? {} : JSON.parse(res))
+            })
         })
     }
 
     deny(jti, values) {
         return new Promise((resolve, reject) => {
             logger.debug(`Saving values ${JSON.stringify(values)} for jti ${jti}`)
-            this.client
-                .set(jti, JSON.stringify(values), (err, _res) => {
-                    if (err) {
-                        logger.error(err)
-                        return reject(err)
-                    }
+            this.client.set(jti, JSON.stringify(values), (err, _res) => {
+                if (err) {
+                    logger.error(err)
+                    return reject(err)
+                }
 
-                    return resolve()
-                })
-                .catch((err) => logger.error(err))
+                return resolve()
+            })
         })
     }
 }
