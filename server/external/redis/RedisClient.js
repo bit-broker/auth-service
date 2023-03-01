@@ -43,6 +43,7 @@ class RedisClient {
         } else {
             this.client = redis.createClient({
                 url: `redis://${process.env.REDIS_ADDR}?db=${process.env.REDIS_DB}&password=${process.env.REDIS_PASSWORD}`,
+                legacyMode: true,
             })
             await this.client.connect()
         }
