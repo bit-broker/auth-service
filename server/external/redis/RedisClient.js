@@ -39,7 +39,7 @@ class RedisClient {
     init() {
         logger.info('Redis client initialized')
         if (process.env.NODE_ENV === 'test') {
-            this.client = redisMock.createClient()
+            this.client = redisMock.createClient({ legacyMode: true })
         } else {
             this.client = redis.createClient(
                 `redis://${process.env.REDIS_ADDR}?db=${process.env.REDIS_DB}&password=${process.env.REDIS_PASSWORD}`
