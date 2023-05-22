@@ -32,7 +32,7 @@
     "devDependencies": {
         "chai": "^4.3.6",
         "chai-as-promised": "^7.1.1",
-        "eslint": "^8.34.0",
+        "eslint": "^8.41.0",
         "husky": "^3.1.0",
         "lint-staged": "^13.1.2",
         "mocha": "^10.0.0",
